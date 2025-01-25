@@ -1,0 +1,24 @@
+{
+  "name": "havton",
+  "version": "1.0.0",
+  "description": "Add cutom halftone effect to any image via canvas",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukaszkups/havton.git"
+  },
+  "keywords": [
+    "halftone",
+    "haftone",
+    "canvas"
+  ],
+  "author": "lukaszkups",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lukaszkups/havton/issues"
+  },
+  "homepage": "https://github.com/lukaszkups/havton#readme"
+}
