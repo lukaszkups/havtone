@@ -1,110 +1,89 @@
-function havtone (opts) {
-  const { 
-    canvasId, 
-    size = 10, 
+function havtone(opts) {
+  const {
+    canvasId,
+    size = 10,
     minSize = 5,
-    spacing = 15, 
-    image, 
-    rotation = 0, 
+    spacing = 15,
+    image,
+    rotation = 0,
     maxFPS = 60,
-    shape = 'square', // 'shape' | 'triangle' | 'circle'
+    shape = 'square', // 'square' | 'triangle' | 'circle'
     hoverEffect = false,
     hoverSize = 200,
     animate = true,
+    randomizedSize = false,
+    sensitivity = 5,
+    hoverSizeMultiplier = 2,
+    animationStepMultiplier = 0.5
   } = opts;
-  const defaultSize = size;
 
-  // timestamps are ms passed since document creation.
-  // lastTimestamp can be initialized to 0, if main loop is executed immediately
-  let lastTimestamp = 0;
-  const timestep = 1000 / maxFPS; // ms for each frame
-
-  // Get references to the canvas and context
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext('2d');
 
+  const halftones = [];
+  let imageData;
   let cursorX = -1;
   let cursorY = -1;
 
-  // Load an image and draw it on the canvas
-  const img = new Image();
-  img.src = image; // Replace with your image path
+  const timestep = 1000 / maxFPS;
+  let lastTimestamp = 0;
 
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    createHalftoneEffect();
-    requestAnimationFrame((timestamp) => drawHalftone(timestamp, cursorX, cursorY));
-  };
+  class HalfTone {
+    constructor(x, y, size, color) {
+      this.x = x;
+      this.y = y;
+      this.size = animate ? randomSize(minSize, size) : size;
+      this.defaultSize = this.size;
+      this.color = color;
+      this.growing = Math.random() < 0.5;
+    }
 
-  // Store the pixel data of the image
-  let imageData;
-  function createHalftoneEffect() {
-    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
+    draw() {
+      ctx.save();
 
-  function drawHalftone(timestamp) {
-    requestAnimationFrame((timestamp) => drawHalftone(timestamp, cursorX, cursorY)); // Continue the animation
-
-    // skip if timestep ms hasn't passed since last frame
-    if (timestamp - lastTimestamp < timestep || !imageData?.data) return;
-
-    lastTimestamp = timestamp;
-
-    const { width, height } = canvas;
-    const data = imageData.data;
-
-    ctx.clearRect(0, 0, width, height);
-
-    class HalfTone {
-      constructor(x, y, size, color) {
-        this.x = x;
-        this.y = y;
-        this.size = animate ? Math.floor(Math.random() * (maxSize - minSize + 1) + minSize) : size;
-        this.growing = Boolean(Math.random() < 0.5);
-        this.color = color || { r: 0, g: 0, b: 0 };
+      if (shape !== 'circle') {
+        ctx.translate(this.x, this.y);
+        ctx.rotate((rotation * Math.PI) / 180);
       }
 
-      draw() {
-        // Save the context state
-        ctx.save();
-
-        // Translate to the shape's center and apply rotation
-
-        if (shape !== 'circle') {
-          ctx.translate(x, y);
-          ctx.rotate(rotation);
-        }
-
-        // Draw the shape
-        ctx.beginPath();
-
-        if (shape === 'square') {
-          ctx.rect(-size / 2, -size / 2, size, size); // Centered square
-        } else if (shape === 'triangle') {
-          ctx.moveTo(0, -size / 2); // Top point
-          ctx.lineTo(-size / 2, size / 2); // Bottom-left point
-          ctx.lineTo(size / 2, size / 2); // Bottom-right point
-        } else if (shape === 'circle') {
-           ctx.arc(x, y, size/2, 0, Math.PI * 2);
-        }
-        
-        // Restore the context state
-        if (shape !== 'circle') {
-          ctx.closePath();
-          ctx.restore();
-        }
-
-        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.fill();
+      ctx.beginPath();
+      if (shape === 'square') {
+        ctx.rect(-this.size / 2, -this.size / 2, this.size, this.size);
+      } else if (shape === 'triangle') {
+        ctx.moveTo(0, -this.size / 2);
+        ctx.lineTo(-this.size / 2, this.size / 2);
+        ctx.lineTo(this.size / 2, this.size / 2);
+        ctx.closePath();
+      } else if (shape === 'circle') {
+        ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
       }
 
-      update() {
-        if (this.animate) {
+      ctx.fillStyle = `rgb(${this.color.r}, ${this.color.g}, ${this.color.b})`;
+      ctx.fill();
+      ctx.restore();
+    }
 
-        }
+    update() {
+      if (!animate) return;
+
+      if (this.growing) {
+        this.size = Math.min(this.size + animationStepMultiplier, size);
+        if (this.size >= size) this.growing = false;
+      } else {
+        this.size = Math.max(this.size - animationStepMultiplier, minSize);
+        if (this.size <= minSize) this.growing = true;
       }
     }
+  }
+
+  function randomSize(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  }
+
+  function createHalftoneEffect() {
+    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const { width, height } = canvas;
+    const data = imageData.data;
 
     for (let y = 0; y < height; y += spacing) {
       for (let x = 0; x < width; x += spacing) {
@@ -112,43 +91,51 @@ function havtone (opts) {
         const r = data[index];
         const g = data[index + 1];
         const b = data[index + 2];
-        const brightness = (r + g + b) / 3;
+        const brightness = (r + g + b) / sensitivity;
 
-        const maxSize = spacing; // Max size of the shape
-        const minSize = 5 // Min size of the shape
-
-        let size = maxSize * (1 - brightness / 255);
-
-        if (
-          hoverEffect &&
-          cursorX >= 0 &&
-          cursorY >= 0 &&
-          Math.hypot(cursorX - x, cursorY - y) < hoverSize
-        ) {
-          size = defaultSize;
-        }
-
-        size = Math.max(minSize, Math.min(maxSize, size));
-
-
+        const dynamicSize = randomizedSize ? size : size * (1 - brightness / 255);
+        const halftone = new HalfTone(x, y, dynamicSize, { r, g, b });
+        halftones.push(halftone);
       }
     }
   }
 
+  function drawHalftone(timestamp) {
+    if (timestamp - lastTimestamp < timestep) {
+      requestAnimationFrame(drawHalftone);
+      return;
+    }
+    lastTimestamp = timestamp;
 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Listen for mousemove events to update the halftone effect dynamically
+    halftones.forEach((halftone) => {
+      if (hoverEffect && cursorX >= 0 && cursorY >= 0) {
+        const distance = Math.hypot(cursorX - halftone.x, cursorY - halftone.y);
+        if (distance < hoverSize) {
+          halftone.size = Math.max(minSize, size * (hoverSizeMultiplier - distance / hoverSize));
+        }
+      }
+      halftone.update();
+      halftone.draw();
+    });
+
+    requestAnimationFrame(drawHalftone);
+  }
+
   canvas.addEventListener('mousemove', (event) => {
     const rect = canvas.getBoundingClientRect();
     cursorX = event.clientX - rect.left;
     cursorY = event.clientY - rect.top;
   });
-}
 
-havtone({
-  image: '/avatar-locs-white.png',
-  canvasId: 'canvass',
-  rotation: 15,
-  shape: 'circle',
-  hoverEffect: true,
-})
+  const img = new Image();
+  img.src = image;
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    createHalftoneEffect();
+    requestAnimationFrame(drawHalftone);
+  };
+}
