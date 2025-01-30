@@ -36,6 +36,7 @@ function havtone(opts) {
       this.defaultSize = this.size;
       this.color = color;
       this.growing = Math.random() < 0.5;
+      this.isHovered = false;
     }
 
     draw() {
@@ -64,7 +65,7 @@ function havtone(opts) {
     }
 
     update() {
-      if (!animate) return;
+      if (!animate || this.isHovered) return;
 
       if (this.growing) {
         this.size = Math.min(this.size + animationStepMultiplier, size);
@@ -113,7 +114,11 @@ function havtone(opts) {
       if (hoverEffect && cursorX >= 0 && cursorY >= 0) {
         const distance = Math.hypot(cursorX - halftone.x, cursorY - halftone.y);
         if (distance < hoverSize) {
+          halftone.isHovered = true;
           halftone.size = Math.max(minSize, size * (hoverSizeMultiplier - distance / hoverSize));
+        } else if (halftone.isHovered) {
+          halftone.isHovered = false;
+          halftone.size = halftone.defaultSize;
         }
       }
       halftone.update();

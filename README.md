@@ -2,37 +2,35 @@
 
 Create custom halftone effect to any image via canvas.
 
-
 # Example usage
 
 ```
 <script src="https://unpkg.com/havtone@latest"></script>
-<div class="particle-canvas-wrapper" style="width: 100%; height: 100vh; position: relative; overflow: hidden;">
-  <div class="particle-canvas"></div>
-</div>
+<canvas id="havtoneCanvas" style="background: #000; width: 900px;"></canvas>
 <script>
-partikle({
-  nodeId: 'particle-canvas',
-  particleColor: '#fefefe',
-  particlesAmount: 400
+havtone({
+  canvasId: 'havtoneCanvas',
+  size: 20,
+  minSize: 10,
+  spacing: 21,
+  image: '/beach-ai.jpg',
+  rotation: 0,
+  maxFPS: 20,
+  shape: 'circle', // 'square' | 'triangle' | 'circle'
+  hoverEffect: true,
+  hoverSize: 250,
+  animate: true,
 });
 </script>
 ```
 
-# Prerequisites
-
-It is suggested that wrapper element that will contain the node with particles have following styling properties:
-
-```
-position: relative;
-overflow: hidden;
-```
-
 # Showcase
 
-Feel free to add your website here:
+TBA.
 
-- [lukaszkups.net](https://lukaszkups.net)
+Feel free to add your website here
+
+# Credits
 
 Author: [@lukaszkups](https://github.com/lukaszkups)
 
