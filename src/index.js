@@ -17,6 +17,8 @@ function havtone(opts) {
     animationStepMultiplier = 0.5
   } = opts;
 
+  let scaleX, scaleY;
+
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext('2d');
 
@@ -69,10 +71,14 @@ function havtone(opts) {
 
       if (this.growing) {
         this.size = Math.min(this.size + animationStepMultiplier, size);
-        if (this.size >= size) this.growing = false;
+        if (this.size >= size) {
+          this.growing = false;
+        }
       } else {
         this.size = Math.max(this.size - animationStepMultiplier, minSize);
-        if (this.size <= minSize) this.growing = true;
+        if (this.size <= minSize) {
+          this.growing = true;
+        }
       }
     }
   }
@@ -100,6 +106,10 @@ function havtone(opts) {
       }
     }
   }
+  
+  function hypot(a, b) {
+    return Math.sqrt(a*a + b*b);
+  }
 
   function drawHalftone(timestamp) {
     if (timestamp - lastTimestamp < timestep) {
@@ -112,7 +122,7 @@ function havtone(opts) {
 
     halftones.forEach((halftone) => {
       if (hoverEffect && cursorX >= 0 && cursorY >= 0) {
-        const distance = Math.hypot(cursorX - halftone.x, cursorY - halftone.y);
+        const distance = hypot(cursorX - halftone.x, cursorY - halftone.y);
         if (distance < hoverSize) {
           halftone.isHovered = true;
           halftone.size = Math.max(minSize, size * (hoverSizeMultiplier - distance / hoverSize));
@@ -130,8 +140,12 @@ function havtone(opts) {
 
   canvas.addEventListener('mousemove', (event) => {
     const rect = canvas.getBoundingClientRect();
-    cursorX = event.clientX - rect.left;
-    cursorY = event.clientY - rect.top;
+    // if (!scaleX && !scaleY) {
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    // }
+    cursorX = (event.clientX - rect.left) * scaleX;
+    cursorY = (event.clientY - rect.top) * scaleY;
   });
 
   const img = new Image();
