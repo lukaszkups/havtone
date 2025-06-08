@@ -1,6 +1,6 @@
 {
   "name": "havtone",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A zero-dependency library for creating halftone effect",
   "types": "dist/types/index.d.ts",
   "files": [
